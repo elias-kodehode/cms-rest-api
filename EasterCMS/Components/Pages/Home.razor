@@ -1,0 +1,59 @@
+﻿@page "/"
+@using EasterCMS.Data
+@using System.ComponentModel.DataAnnotations;
+@inject AppDbContext db
+
+<EditForm class="form-group" Model="request" OnValidSubmit="Submit" FormName="create-participant">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+        <label>
+            Name:
+            <InputText class="form-control" @bind-value="request.FullName" />
+        </label>
+
+        <label>
+            Age:
+            <InputNumber class="form-control" @bind-Value="request.Age" />
+        </label>
+
+        <label>
+            City:
+            <InputText class="form-control" @bind-Value="request.City" />
+        </label>
+        <button class="btn btn-primary">Add</button>
+</EditForm>
+
+@code{
+
+    [SupplyParameterFromForm]
+    CreateParticipantModel request { get; set; } = new();
+
+
+
+    private async Task Submit(EditContext args)
+    {
+        await db.Participants.AddAsync(new Models.Participant
+        {
+            Age = request.Age,
+            FullName = request.FullName,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            City = request.City
+
+        });
+        await db.SaveChangesAsync();
+    }
+
+    class CreateParticipantModel
+    {
+        [EditorRequired]
+        public string FullName { get; set; } = string.Empty;
+
+        [EditorRequired, Range(0, 100)]
+        public int Age { get; set; }
+
+        [EditorRequired]
+        public string City { get; set; } = string.Empty;
+    }
+
+}

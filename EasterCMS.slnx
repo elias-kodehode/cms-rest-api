@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EasterCMS.AppHost/EasterCMS.AppHost.csproj" />
+  <Project Path="EasterCMS.ServiceDefaults/EasterCMS.ServiceDefaults.csproj" />
+  <Project Path="EasterCMS/EasterCMS.csproj" />
+</Solution>
