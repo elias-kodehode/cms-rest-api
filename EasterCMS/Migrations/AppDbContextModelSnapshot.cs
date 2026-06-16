@@ -49,6 +49,45 @@ namespace EasterCMS.Migrations
 
                     b.ToTable("Participants");
                 });
+
+            modelBuilder.Entity("EasterCMS.Models.Prize", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Collected")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("InStock")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ParticipantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParticipantId");
+
+                    b.ToTable("Prizes");
+                });
+
+            modelBuilder.Entity("EasterCMS.Models.Prize", b =>
+                {
+                    b.HasOne("EasterCMS.Models.Participant", "Participant")
+                        .WithMany("Prizes")
+                        .HasForeignKey("ParticipantId");
+
+                    b.Navigation("Participant");
+                });
+
+            modelBuilder.Entity("EasterCMS.Models.Participant", b =>
+                {
+                    b.Navigation("Prizes");
+                });
 #pragma warning restore 612, 618
         }
     }

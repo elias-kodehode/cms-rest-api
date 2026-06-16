@@ -8,4 +8,6 @@ public class Participant
     public string City { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public ICollection<Prize> Prizes { get; set; } = [];
 }

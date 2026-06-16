@@ -29,6 +29,7 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+using var scope = app.Services.CreateScope();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -37,7 +38,6 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 }
@@ -47,7 +47,7 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-var endpoints = app.Services.GetServices<IEndpoint>();
+var endpoints = scope.ServiceProvider.GetServices<IEndpoint>();
 foreach (var endpoint in endpoints)
 {
     endpoint.MapEndpoints(app);

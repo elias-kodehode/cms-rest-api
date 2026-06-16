@@ -1,7 +1,8 @@
 ﻿using EasterCMS.Data;
 using Microsoft.AspNetCore.Mvc;
+using EasterCMS.Models;
 
-namespace EasterCMS.Endpoints.Participant;
+namespace EasterCMS.Endpoints;
 
 public class ParticipantEndpoints : IEndpoint
 {
@@ -17,14 +18,14 @@ public class ParticipantEndpoints : IEndpoint
         });
 
 
-        group.MapGet("/participants/{id}", ([FromRoute] Guid id, AppDbContext ctx) => {
-            var p = ctx.Participants.FirstOrDefault(x => x.Id == id);
+        group.MapGet("/participants/{id}", ([FromRoute] Guid id, AppDbContext db) => {
+            var p = db.Participants.FirstOrDefault(x => x.Id == id);
 
             return p is not null ? Results.Ok(p) : Results.NotFound();
         });
 
-        group.MapPost("/participants", async (CreateParticipantRequest request, AppDbContext ctx) => {
-            var p = await ctx.Participants.AddAsync(new EasterCMS.Models.Participant
+        group.MapPost("/participants", async (CreateParticipantRequest request, AppDbContext db) => {
+            var p = await db.Participants.AddAsync(new Participant
             {
                 FullName = request.FullName,
                 Age = request.Age,
@@ -32,7 +33,7 @@ public class ParticipantEndpoints : IEndpoint
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             });
-            await ctx.SaveChangesAsync();
+            await db.SaveChangesAsync();
 
 
             return Results.Ok(new
@@ -43,9 +44,29 @@ public class ParticipantEndpoints : IEndpoint
 
         group.MapPut("/participants/{id}", () => { });
 
-        group.MapDelete("/participants/{id}", () => { });
+        group.MapDelete("/participants/{id}", (Guid id,AppDbContext ctx) => {
+            var p = ctx.Participants.FirstOrDefault(x => x.Id == id);
 
-        group.MapGet("/participants/{id}/prizes", () => { });
+            if(p is null)
+            {
+                return Results.NotFound();
+            }
+            ctx.Participants.Remove(p);
+
+            return Results.Ok();
+        });
+
+        group.MapGet("/participants/{id}/prizes", (Guid id,AppDbContext db) =>
+        {
+            var p = db.Participants.FirstOrDefault(x => x.Id == id);
+            if(p is null)
+            {
+                return Results.NotFound();
+            }
+
+            return Results.Ok(new { prizes = p.Prizes.ToList()});
+            
+        });
     }
 
     record CreateParticipantRequest(
