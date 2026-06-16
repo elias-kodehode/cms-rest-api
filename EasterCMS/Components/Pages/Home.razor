@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using EasterCMS.Data
 @using System.ComponentModel.DataAnnotations;
+@using EasterCMS.Models;
+@using Microsoft.EntityFrameworkCore;
 @inject AppDbContext db
 
 <EditForm class="form-group" Model="request" OnValidSubmit="Submit" FormName="create-participant">
@@ -23,12 +25,36 @@
         <button class="btn btn-primary">Add</button>
 </EditForm>
 
+<ul>
+    @foreach(var p in Participants)
+    {
+        <li @key="p.Id">
+            <a href="/participant/@p.Id">@p.FullName</a>
+            Prizes:
+                @foreach(var prize in p.Prizes)
+                {
+                    <div @key="prize.Id">@prize.Name</div>
+                }
+         </li>
+
+    }
+</ul>
+
+
 @code{
 
     [SupplyParameterFromForm]
     CreateParticipantModel request { get; set; } = new();
 
 
+    public List<Participant> Participants { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Participants = await db
+            .Participants
+            .Include(p => p.Prizes).ToListAsync();
+    }
 
     private async Task Submit(EditContext args)
     {
@@ -42,7 +68,12 @@
 
         });
         await db.SaveChangesAsync();
+
+        _ = Task.Run(StateHasChanged);
+
+        await OnInitializedAsync();
     }
+
 
     class CreateParticipantModel
     {

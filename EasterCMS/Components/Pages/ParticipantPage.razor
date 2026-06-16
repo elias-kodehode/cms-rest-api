@@ -1,0 +1,47 @@
+﻿@page "/participant/{id:guid}"
+@using EasterCMS.Data
+@using System.ComponentModel.DataAnnotations;
+@using EasterCMS.Models;
+@using Microsoft.EntityFrameworkCore;
+@inject AppDbContext db
+
+
+<a href="/">Back</a>
+
+@if (Participant is not null)
+{
+	<div class="participant-card">
+		<h1>@Participant.FullName</h1>
+		@if(Participant.Prizes.Any())
+		{
+			<ul>
+				@foreach(var p in Participant.Prizes)
+				{
+					<li @key="p.Id">@p.Name</li>
+				}
+			</ul>
+		}
+		else
+		{
+			<h2>No Prizes</h2>
+		}
+	</div>
+}
+
+@code {
+
+	[Parameter]
+	public Guid Id { get; set; }
+
+	public Participant? Participant { get; set; } = null;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		Participant ??= 
+			await db.Participants
+				.Include(p => p.Prizes)
+				.FirstOrDefaultAsync(x => x.Id == Id);
+		_ = Task.Run(StateHasChanged);
+	}
+}

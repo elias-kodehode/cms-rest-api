@@ -48,6 +48,17 @@ namespace EasterCMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Participants");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("880595b4-1b81-40dc-8d41-5744284d8864"),
+                            Age = 29,
+                            City = "Ulsteinvik",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FullName = "Elias Sørensen",
+                            UpdatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("EasterCMS.Models.Prize", b =>
@@ -62,6 +73,10 @@ namespace EasterCMS.Migrations
                     b.Property<bool>("InStock")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("ParticipantId")
                         .HasColumnType("uuid");
 
@@ -73,6 +88,26 @@ namespace EasterCMS.Migrations
                     b.HasIndex("ParticipantId");
 
                     b.ToTable("Prizes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("880595b4-1b81-40dc-8d41-5744284d1234"),
+                            Collected = false,
+                            InStock = true,
+                            Name = "Vase",
+                            ParticipantId = new Guid("880595b4-1b81-40dc-8d41-5744284d8864"),
+                            Value = 1500.0
+                        },
+                        new
+                        {
+                            Id = new Guid("880595b4-1b81-40dc-8d41-5744284d1235"),
+                            Collected = false,
+                            InStock = true,
+                            Name = "Chocolate",
+                            ParticipantId = new Guid("880595b4-1b81-40dc-8d41-5744284d8864"),
+                            Value = 50.0
+                        });
                 });
 
             modelBuilder.Entity("EasterCMS.Models.Prize", b =>

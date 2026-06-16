@@ -2,6 +2,7 @@
 using EasterCMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.AspNetCore.Http.Results;
 
 namespace EasterCMS.Endpoints;
 
@@ -18,11 +19,15 @@ public class PrizeEndpoint : IEndpoint
 
 
 
-
+	public record AssignPrizeRequest(Guid ParticipantId);
+	public record CreatePrizeRequest(Guid? ParticipantId);
 
 	async Task<IResult> GetPrizes(AppDbContext db)
 	{
-		return Results.Ok(new { prizes = await db.Prizes.ToListAsync() });
+		return Ok(new
+		{
+			prizes = await db.Prizes.ToListAsync()
+		});
 	}
 
 	async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
@@ -34,7 +39,7 @@ public class PrizeEndpoint : IEndpoint
 
 			if(!exists)
 			{
-				return Results.BadRequest("Participant not found");
+				return BadRequest("Participant not found");
 			}
 		}
 
@@ -49,7 +54,10 @@ public class PrizeEndpoint : IEndpoint
 		prize.State = EntityState.Added;
 		await db.SaveChangesAsync();
 
-		return Results.Ok(new { prize.Entity.Id });
+		return Ok(new
+		{
+			prize.Entity.Id
+		});
 	}
 
 
@@ -60,28 +68,26 @@ public class PrizeEndpoint : IEndpoint
 
 		if(user is null)
 		{
-			return Results.NotFound();
+			return NotFound();
 		}
 
 		var prize = db.Prizes.FirstOrDefault(x => x.Id == id);
 
 		if(prize is null)
 		{
-			return Results.NotFound();
+			return NotFound();
 		}
 		db.Update(user);
 
 		user.Prizes.Add(prize);
 
 		await db.SaveChangesAsync();
-		return Results.Ok(new { user.Prizes });
+
+		return Ok(new
+		{
+			user.Prizes
+		});
 	}
-	public record AssignPrizeRequest(
-		Guid ParticipantId
-	);
 
 
-	public record CreatePrizeRequest(
-		Guid? ParticipantId
-	);
 }

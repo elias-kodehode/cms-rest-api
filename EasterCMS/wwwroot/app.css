@@ -1,4 +1,39 @@
-html, body {
+*:not(ul) {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    color: hsla(0, 0%, 80%, 1);
+}
+
+body{
+    background-color: hsla(0, 0%, 5%, 1);
+}
+
+main {
+    display:flex;
+    flex: 1;
+    flex-direction:column;
+    padding:50px;
+}
+
+.participant-card {
+    display: flex;
+    flex-direction: column;
+    background-color: hsla(0, 0%, 15%, 1);
+    border-radius:15px;
+    padding:15px;
+    width:fit-content;
+}
+
+.participant-card ul {
+    display:flex; 
+    flex-direction:column;
+}
+
+ul{
+/*    list-style-type:none;*/
+}
+/*html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -57,4 +92,4 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
-}
+}*/
