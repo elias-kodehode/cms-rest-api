@@ -7,39 +7,31 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-
-var connection = builder.Configuration.GetConnectionString("db");
+	.AddInteractiveServerComponents();
 
 builder.AddNpgsqlDbContext<AppDbContext>("db");
 
 
 builder.Services.Scan(scan => scan
-    .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.AssignableTo<IEndpoint>())
-    .AsImplementedInterfaces()
-    .WithScopedLifetime());
-
-
+	.FromAssemblyOf<IEndpoint>()
+	.AddClasses(x => x.AssignableTo<IEndpoint>())
+	.AsImplementedInterfaces()
+	.WithSingletonLifetime());
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-using var scope = app.Services.CreateScope();
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if(!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-else
+	app.UseExceptionHandler("/Error", createScopeForErrors: true);
+	app.UseHsts();
+} else
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+	using var scope = app.Services.CreateScope();
+	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+	await db.Database.MigrateAsync();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
@@ -47,15 +39,11 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-var endpoints = scope.ServiceProvider.GetServices<IEndpoint>();
-foreach (var endpoint in endpoints)
-{
-    endpoint.MapEndpoints(app);
-}
+app.MapApiEndpoints();
 
 app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+	.AddInteractiveServerRenderMode();
 
 app.Run();
