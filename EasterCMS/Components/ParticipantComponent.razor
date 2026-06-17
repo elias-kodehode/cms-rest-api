@@ -1,0 +1,35 @@
+﻿@using EasterCMS.Models
+
+<div class=@CardClass>
+	<div class="participant-card-header">
+		<h1>@Participant.FullName</h1>
+
+		@if (!Expanded)
+		{
+			<a href="/participants/@Participant.Id">Edit</a>
+		}
+	</div>
+	@if(Participant.Prizes.Any())
+	{
+		<ul>
+			@foreach(var p in Participant.Prizes)
+			{
+				<li @key="p.Id">@p.Name</li>
+			}
+		</ul>
+	} else
+	{
+		<h2>No Prizes</h2>
+	}
+</div>
+
+@code {
+
+	string CardClass => Expanded ? "participant-card expand" : "participant-card";
+
+	[Parameter]
+	public bool Expanded { get; set; } = false;
+
+	[Parameter, EditorRequired]
+	public Participant Participant { get; set; } = default!; 
+}

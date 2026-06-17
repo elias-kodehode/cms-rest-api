@@ -44,7 +44,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 				Collected = false,
 				Id = new("880595b4-1b81-40dc-8d41-5744284d1235"),
 				InStock = true,
-				ParticipantId = new("880595b4-1b81-40dc-8d41-5744284d8864")
+				//ParticipantId = new("880595b4-1b81-40dc-8d41-5744284d8864")
 			});
 	}
 }

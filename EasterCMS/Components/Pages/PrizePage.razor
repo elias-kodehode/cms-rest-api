@@ -1,0 +1,62 @@
+﻿@page "/prizes/{id:guid?}"
+@inject AppDbContext db
+
+
+@if(Id is null)
+{
+	<h1>Unclaimed Prizes:</h1>
+	<ul>
+		@foreach(var p in Unclaimed)
+		{
+			<li @key="p.Id">
+				@p.Name - <a href="/prizes/@p.Id">@p.Id</a>
+			</li>
+		}
+
+	</ul>
+
+	<h1>Claimed Prizes:</h1>
+	<ul>
+		@foreach(var p in Prizes)
+		{
+			<li @key="p.Id">
+				@p.Name - <a href="/prizes/@p.Id">@p.Id</a>
+			</li>
+		}
+
+	</ul>
+}
+else
+{
+	if(Prize is not null)
+	{	
+		<h1>Prize</h1>
+		<h2>@Prize.Name</h2>
+	}
+	else
+	{
+		<h1>Prize Not Found</h1>
+	}
+}
+
+@code {
+
+	[Parameter]
+	public Guid? Id { get; set; } = null;
+
+
+	public Prize? Prize { get; set; } = null;
+
+	public List<Prize> Prizes { get; set; } = [];
+	public List<Prize> Unclaimed { get; set; } = [];
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if(Id is not null)
+		{
+			Prize = await db.Prizes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Id);
+		}
+		Prizes = await db.Prizes.AsNoTracking().ToListAsync();
+		Unclaimed = Prizes.Where(x => x.ParticipantId == null).ToList();
+	}
+}

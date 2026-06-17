@@ -5,8 +5,32 @@
     color: hsla(0, 0%, 80%, 1);
 }
 
+header {
+    display: flex;
+    flex-direction: row;
+    min-height: fit-content;
+    background-color: hsla(0, 0%, 25%, 1);
+    box-shadow: 0px 1px 5px black;
+    justify-content:flex-start;
+    align-items:center;
+    padding:5px;
+    gap:1rem;
+}
+
+header a {
+/*    background-color: hsla(0, 0%, 15%, 1);*/
+/*    border-radius: 15px;*/
+    padding: 5px 1rem;
+/*    box-shadow: inset 0px 0px 1px black;*/
+    border-radius:15px;
+}
+
+header a:hover {
+    box-shadow: inset 0px 0px 5px black;
+}
+
 body{
-    background-color: hsla(0, 0%, 5%, 1);
+    background-color: hsla(0, 0%, 15%, 1);
 }
 
 main {
@@ -19,10 +43,12 @@ main {
 .participant-card {
     display: flex;
     flex-direction: column;
-    background-color: hsla(0, 0%, 15%, 1);
-    border-radius:15px;
-    padding:15px;
-    width:fit-content;
+    background-color: hsla(0, 0%, 25%, 1);
+    border-radius: 15px;
+    padding: 15px;
+    width: max-content;
+    min-width: 300px;
+    box-shadow: 4px 4px 4px hsla(0, 0%, 0%, .5);
 }
 
 .participant-card ul {
@@ -30,6 +56,14 @@ main {
     flex-direction:column;
 }
 
+.participant-list{
+    display:flex;
+    gap:8px;
+    flex-direction:column;
+}
+input{
+    color:black;
+}
 ul{
 /*    list-style-type:none;*/
 }

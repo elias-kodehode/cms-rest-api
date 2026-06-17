@@ -29,7 +29,7 @@
     @foreach(var p in Participants)
     {
         <li @key="p.Id">
-            <a href="/participant/@p.Id">@p.FullName</a>
+            <a href="/participants/@p.Id">@p.FullName</a>
             Prizes:
                 @foreach(var prize in p.Prizes)
                 {

@@ -11,7 +11,6 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 
-var conn = builder.Configuration.GetConnectionString("db");
 builder.AddNpgsqlDbContext<AppDbContext>("db");
 
 

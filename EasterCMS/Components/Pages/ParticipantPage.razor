@@ -1,47 +1,66 @@
-﻿@page "/participant/{id:guid}"
-@using EasterCMS.Data
-@using System.ComponentModel.DataAnnotations;
-@using EasterCMS.Models;
-@using Microsoft.EntityFrameworkCore;
+﻿@page "/participants/{id:guid?}"
+
 @inject AppDbContext db
+@inject ILogger<ParticipantPage> Logger
 
 
-<a href="/">Back</a>
-
-@if (Participant is not null)
+@if(Id is null)
 {
-	<div class="participant-card">
-		<h1>@Participant.FullName</h1>
-		@if(Participant.Prizes.Any())
-		{
-			<ul>
-				@foreach(var p in Participant.Prizes)
-				{
-					<li @key="p.Id">@p.Name</li>
-				}
-			</ul>
-		}
-		else
-		{
-			<h2>No Prizes</h2>
-		}
-	</div>
+	<ParticipantList Participants="Participants"/>
+}
+else
+{
+	if(Participant is not null)
+	{
+		<ParticipantComponent Expanded="true" Participant="Participant"/>
+	}
+	else
+	{
+		<h1>Participant Not found</h1>
+	}
 }
 
 @code {
 
 	[Parameter]
-	public Guid Id { get; set; }
+	public Guid? Id { get; set; }
 
 	public Participant? Participant { get; set; } = null;
 
 
-	protected override async Task OnInitializedAsync()
+	public List<Participant> Participants { get; set; } = [];
+
+	public async Task LoadParticipants()
 	{
-		Participant ??= 
-			await db.Participants
+		if(Id is null)
+		{
+			Participant = null;
+
+			Participants = await db.Participants
+					.AsNoTracking()
+					.Include(p => p.Prizes)
+					.ToListAsync();
+
+			Logger.LogInformation("Loaded {Count} participants", Participants.Count);
+		} else
+		{
+			Participant = await db
+				.Participants
+				.AsNoTracking()
 				.Include(p => p.Prizes)
 				.FirstOrDefaultAsync(x => x.Id == Id);
+
+				Logger.LogInformation("Loaded participant {Participant}", Participant?.FullName);
+		}
+
+
+
 		_ = Task.Run(StateHasChanged);
+	}
+
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await LoadParticipants();
 	}
 }

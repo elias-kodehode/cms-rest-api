@@ -1,0 +1,18 @@
+﻿@using EasterCMS.Models
+@if(Participants.Count > 0)
+{
+
+	<div class="participant-list">
+		@foreach(var p in Participants)
+		{
+			<ParticipantComponent Expanded="false" @key="p.Id" Participant="p"/>
+		}
+	</div>
+}
+
+@code {
+
+
+	[Parameter]
+	public List<Participant> Participants { get; set; } = [];
+}
