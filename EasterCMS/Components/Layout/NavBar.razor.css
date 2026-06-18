@@ -1,0 +1,10 @@
+/* CSS for NavBar component */
+a::deep {
+    padding: 5px 1rem;
+    border-radius: 15px;
+    background-color:orange;
+}
+
+a:hover {
+    box-shadow: inset 0px 0px 5px hsla(0, 0%, 15%, .5);
+}

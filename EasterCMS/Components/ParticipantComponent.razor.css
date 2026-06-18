@@ -12,6 +12,21 @@
 }
 
 
+.participant-card {
+	display: flex;
+	flex-direction: column;
+	background-color: hsla(0, 0%, 25%, 1);
+	border-radius: 15px;
+	padding: 15px;
+	width: max-content;
+	min-width: 300px;
+	box-shadow: 4px 4px 4px hsla(0, 0%, 0%, .5);
+}
+
+.participant-card ul {
+	display: flex;
+	flex-direction: column;
+}
 
 .participant-card.expand {
 	display: flex;
