@@ -15,7 +15,7 @@ public class ParticipantEndpoints : IEndpoint
 		app.MapPut("/participants/{id}", UpdateParticipant);
 		app.MapDelete("/participants/{id}", DeleteParticipant);
 		app.MapGet("/participants/{id}/prizes", GetParticipantPrizes);
-	}
+	}	
 
 	record CreateParticipantRequest(
 		string FullName,

@@ -1,6 +1,7 @@
 using EasterCMS;
 using EasterCMS.Components;
 using EasterCMS.Data;
+using EasterCMS.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,11 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
+
+	var o = builder.Host.Properties;
+
+builder.Services.AddHttpClient("api", x => x.BaseAddress = new Uri("https://localhost:7141/api/"));
+builder.Services.AddTransient<ApiClient>();
 
 builder.AddNpgsqlDbContext<AppDbContext>("db");
 
@@ -38,9 +44,10 @@ if(!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.MapGet("/test", () => "Hello");
 app.UseAntiforgery();
 
-app.MapApiEndpoints();
+app.MapApiEndpoints("/api");
 
 app.MapStaticAssets();
 

@@ -1,9 +1,11 @@
 ﻿@page "/"
 @using EasterCMS.Data
+@using EasterCMS.Services
 @using System.ComponentModel.DataAnnotations;
 @using EasterCMS.Models;
 @using Microsoft.EntityFrameworkCore;
 @inject AppDbContext db
+@inject ApiClient API
 
 <EditForm class="form-group" Model="request" OnValidSubmit="Submit" FormName="create-participant">
     <DataAnnotationsValidator />
@@ -51,6 +53,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+
         Participants = await db
             .Participants
             .Include(p => p.Prizes).ToListAsync();

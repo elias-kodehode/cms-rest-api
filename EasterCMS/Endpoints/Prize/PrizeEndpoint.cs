@@ -10,16 +10,15 @@ public class PrizeEndpoint : IEndpoint
 {
 	public void MapEndpoint(RouteGroupBuilder app)
 	{
-		var group = app.MapGroup("/api");
 
-		group.MapGet("/prizes", GetPrizes);
-		group.MapPost("/prizes", CreatePrize);
-		group.MapPost("/prizes/{id}/assign", AssignPrize);
+		app.MapGet("/prizes", GetPrizes);
+		app.MapPost("/prizes", CreatePrize);
+		app.MapPost("/prizes/{id}/assign", AssignPrize);
 	}
 
 
 
-	public record AssignPrizeRequest(Guid ParticipantId);
+	public record AssignPrizeRequest(Guid? ParticipantId);
 	public record CreatePrizeRequest(Guid? ParticipantId);
 
 	async Task<IResult> GetPrizes(AppDbContext db)
@@ -29,7 +28,6 @@ public class PrizeEndpoint : IEndpoint
 			prizes = await db.Prizes.ToListAsync()
 		});
 	}
-
 	async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
 	{
 
@@ -59,33 +57,51 @@ public class PrizeEndpoint : IEndpoint
 			prize.Entity.Id
 		});
 	}
-
-
 	async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
 	{
-
-		var user = db.Participants.FirstOrDefault(x => request.ParticipantId == x.Id);
-
-		if(user is null)
-		{
-			return NotFound();
-		}
-
 		var prize = db.Prizes.FirstOrDefault(x => x.Id == id);
-
-		if(prize is null)
+		if(prize == null || !prize.InStock)
 		{
-			return NotFound();
+			return BadRequest(
+				prize == null ? "Prize not found":"Prize is not in stock"
+			);
 		}
-		db.Update(user);
 
-		user.Prizes.Add(prize);
 
+
+		Participant? participant = null;
+
+		if(request.ParticipantId is not null)
+		{
+			participant = db.Participants.FirstOrDefault(x => request.ParticipantId == x.Id);
+            if (participant is null)
+            {
+                return NotFound();
+            }
+        }
+
+
+
+
+		var entity = db.Update(prize);
+
+
+		if(participant is null)
+		{
+			entity.Entity.Collected = false;
+			entity.Entity.Participant = null;
+			entity.Entity.ParticipantId = null;
+		}
+		else
+		{
+			entity.Entity.Collected = true;
+			entity.Entity.ParticipantId = participant.Id;
+		}
 		await db.SaveChangesAsync();
 
 		return Ok(new
 		{
-			user.Prizes
+
 		});
 	}
 
