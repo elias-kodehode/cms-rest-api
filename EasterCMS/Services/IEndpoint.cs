@@ -1,4 +1,4 @@
-﻿namespace EasterCMS;
+﻿namespace EasterCMS.Services;
 
 public interface IEndpoint
 {

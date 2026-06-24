@@ -1,4 +1,6 @@
-﻿namespace EasterCMS;
+﻿using EasterCMS.Services;
+
+namespace EasterCMS;
 
 public static class EndpointExtensions
 {

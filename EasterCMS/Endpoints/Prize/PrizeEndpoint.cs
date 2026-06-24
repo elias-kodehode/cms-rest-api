@@ -1,5 +1,6 @@
 ﻿using EasterCMS.Data;
 using EasterCMS.Models;
+using EasterCMS.Services;
 using EasterCMS.Validators;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

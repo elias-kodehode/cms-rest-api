@@ -12,9 +12,8 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 
-	var o = builder.Host.Properties;
-
-builder.Services.AddHttpClient("api", x => x.BaseAddress = new Uri("https://localhost:7141/api/"));
+builder.Services.AddHttpClient("api", 
+	x => x.BaseAddress = new Uri(builder.Configuration["Api:Url"] ?? throw new Exception("Missing Api:Url")));
 builder.Services.AddTransient<ApiClient>();
 
 builder.AddNpgsqlDbContext<AppDbContext>("db");
@@ -26,10 +25,12 @@ builder.Services.Scan(scan => scan
 	.AsImplementedInterfaces()
 	.WithSingletonLifetime());
 
+
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
 
+
+app.MapDefaultEndpoints();
 if(!app.Environment.IsDevelopment())
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -40,18 +41,11 @@ if(!app.Environment.IsDevelopment())
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 	await db.Database.MigrateAsync();
 }
-
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
-
-app.MapGet("/test", () => "Hello");
 app.UseAntiforgery();
-
 app.MapApiEndpoints("/api");
-
 app.MapStaticAssets();
-
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
-
 app.Run();
