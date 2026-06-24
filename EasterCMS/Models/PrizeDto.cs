@@ -1,4 +1,4 @@
-﻿namespace EasterCMS.Endpoints;
+﻿namespace EasterCMS.Models;
 
 public  class PrizeDto
 {
