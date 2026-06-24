@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 			.HasForeignKey(p => p.ParticipantId)
 			.IsRequired(false);
 
+		builder.Entity<Participant>().HasIndex(x => x.FullName);
 
 		builder.Entity<Participant>()
 			.HasData(new Participant
