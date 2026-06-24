@@ -2,6 +2,7 @@ using EasterCMS;
 using EasterCMS.Components;
 using EasterCMS.Data;
 using EasterCMS.Services;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +25,6 @@ builder.Services.Scan(scan => scan
 	.AddClasses(x => x.AssignableTo<IEndpoint>())
 	.AsImplementedInterfaces()
 	.WithSingletonLifetime());
-
 
 var app = builder.Build();
 

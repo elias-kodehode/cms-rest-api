@@ -2,6 +2,7 @@
 using EasterCMS.Models;
 using EasterCMS.Services;
 using EasterCMS.Validators;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static Microsoft.AspNetCore.Http.Results;
@@ -79,7 +80,6 @@ public partial class ParticipantEndpoints : IEndpoint
 	async Task<IResult> CreateParticipant(CreateParticipantRequest request, AppDbContext db)
 	{
 		var validator = new CreateParticipantRequestValidator();
-
 		var validationResult = await validator.ValidateAsync(request);
 
 
