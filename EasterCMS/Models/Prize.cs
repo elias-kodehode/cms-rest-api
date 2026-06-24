@@ -1,4 +1,6 @@
-﻿namespace EasterCMS.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace EasterCMS.Models;
 
 public class Prize
 {
@@ -7,6 +9,8 @@ public class Prize
 	public bool InStock { get; set; }
 	public bool Collected { get; set; }
 	public double Value { get; set; }
+
+	[JsonIgnore]
 	public Participant? Participant { get; set; } = null;
 	public Guid? ParticipantId { get; set; } = null;
 }
