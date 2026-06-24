@@ -42,7 +42,10 @@ public class PrizeEndpoint : IEndpoint
 
 	static async Task<IResult> GetPrizeById(Guid id, AppDbContext db)
 	{
-		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+		var prize = await db
+			.Prizes
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.Id == id);
 
 		if(prize is null)
 		{
@@ -61,13 +64,25 @@ public class PrizeEndpoint : IEndpoint
 			}
 		});
 	}
+
 	static async Task<IResult> GetPrizes(AppDbContext db)
 	{
 		return Ok(new
 		{
-			prizes = await db.Prizes.ToListAsync()
+			prizes = await db.Prizes
+			.AsNoTracking()
+			.Select(x => new PrizeDto
+			{
+				Collected = x.Collected,
+				Id = x.Id,
+				InStock = x.InStock,
+				Name = x.Name,
+				Value = x.Value,
+			})
+			.ToListAsync()
 		});
 	}
+
 	static async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
 	{
 		var validator = new CreatePrizeRequestValidator();
@@ -162,6 +177,7 @@ public class PrizeEndpoint : IEndpoint
 	static async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
 	{
 		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+
 		if(prize == null || !prize.InStock)
 		{
 			return BadRequest(
@@ -184,19 +200,6 @@ public class PrizeEndpoint : IEndpoint
 
 
 		prize.ParticipantId = request.ParticipantId;
-
-
-		//if(participant is null)
-		//{
-		//	prize.Collected = false;
-		//	prize.Participant = null;
-		//	prize.ParticipantId = null;
-		//}
-		//else
-		//{
-		//	prize.Collected = true;
-		//	prize.ParticipantId = participant.Id;
-		//}
 		await db.SaveChangesAsync();
 
 		return Ok($"Assigned prize to {request.ParticipantId}");
