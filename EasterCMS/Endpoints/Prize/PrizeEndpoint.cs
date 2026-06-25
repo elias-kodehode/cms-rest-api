@@ -170,7 +170,7 @@ public class PrizeEndpoint : IEndpoint
 		db.Prizes.Remove(prize);
 		await db.SaveChangesAsync();
 
-		return Ok();
+		return NoContent();
 
 	}
 
