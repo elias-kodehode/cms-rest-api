@@ -190,33 +190,72 @@ public class ParticipantEndpoints : IEndpoint
         logger.LogInformation("Successfully deleted {p}", p.Id);
         return NoContent();
     }
+
     async Task<IResult> GetParticipantPrizes(Guid id, AppDbContext db)
     {
-        var participant = await db
+
+        var participant = await 
+            db
             .Participants
             .AsNoTracking()
-            .Include(x => x.Prizes)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .Where(x => x.Id == id)
+            .Select(p => new
+            {
+                Prizes = p.Prizes.Select(x => new PrizeDto
+                {
+                    Id = x.Id,
+                    Collected = x.Collected,
+                    InStock = x.InStock,
+                    Name = x.Name,
+                    Value = x.Value
+                }).ToList()
+            }).FirstOrDefaultAsync();
 
-        if (participant is null)
-            return NotFound();
-
-        var prizes = participant?.Prizes.Select(x => new PrizeDto { 
-            Collected = x.Collected,
-            Id = x.Id,
-            InStock = x.InStock,
-            Name = x.Name,
-            Value = x.Value
-        }).ToList();
-
-        if (prizes is null || prizes.Count <= 0)
+        if(participant is null)
         {
             return NotFound();
         }
 
-        return Ok(new {
-            prizes
+        return Ok(new { 
+            Prizes = participant.Prizes
         });
+
+        //var p = await db
+        //    .Participants
+        //    .AsNoTracking()
+        //    .Where(x => x.Id == id)
+        //    .SelectMany(x => x.Prizes)
+        //    .Select(x => new PrizeDto { 
+        //        Collected = x.Collected,
+        //        Id = x.Id,
+        //        InStock = x.InStock,
+        //        Name = x.Name,
+        //        Value = x.Value,
+        //    })
+        //    .ToListAsync();
+
+
+        //if (p.Count <= 0)
+        //{
+        //    var participantExists = 
+        //        await db
+        //            .Participants
+        //            .AsNoTracking()
+        //            .AnyAsync(p => p.Id == id);
+
+        //    if (!participantExists)
+        //        return NotFound();
+        //}
+
+
+        //if (prizes is null || prizes.Count <= 0)
+        //{
+        //    return NotFound();
+        //}
+
+        //return Ok(new {
+        //    prizes
+        //});
 
     }
 
