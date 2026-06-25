@@ -9,7 +9,7 @@ using static Microsoft.AspNetCore.Http.Results;
 
 namespace EasterCMS.Endpoints;
 
-public partial class ParticipantEndpoints : IEndpoint
+public class ParticipantEndpoints : IEndpoint
 {
 	public void MapEndpoint(RouteGroupBuilder app)
 	{
@@ -19,7 +19,7 @@ public partial class ParticipantEndpoints : IEndpoint
 		app.MapPut("/participants/{id}", UpdateParticipant);
 		app.MapDelete("/participants/{id}", DeleteParticipant);
 		app.MapGet("/participants/{id}/prizes", GetParticipantPrizes);
-	}	
+	}
 
 	public record CreateParticipantRequest(
 		string FullName,
@@ -36,12 +36,14 @@ public partial class ParticipantEndpoints : IEndpoint
 			participants = await ctx
 				.Participants
 				.Include(x => x.Prizes)
-				.Select(x => new ParticipantDto { 
+				.Select(x => new ParticipantDto
+				{
 					Age = x.Age,
 					City = x.City,
 					FullName = x.FullName,
 					Id = x.Id,
-					Prizes = x.Prizes.Select(p => new PrizeDto {
+					Prizes = x.Prizes.Select(p => new PrizeDto
+					{
 						Collected = p.Collected,
 						Id = p.Id,
 						InStock = p.InStock,
@@ -64,7 +66,7 @@ public partial class ParticipantEndpoints : IEndpoint
 				FullName = x.FullName,
 				Age = x.Age,
 				City = x.City,
-				Prizes= x.Prizes.Select(p => new PrizeDto
+				Prizes = x.Prizes.Select(p => new PrizeDto
 				{
 					Collected = p.Collected,
 					Id = p.Id,
@@ -83,7 +85,7 @@ public partial class ParticipantEndpoints : IEndpoint
 		var validationResult = await validator.ValidateAsync(request);
 
 
-		if (!validationResult.IsValid)
+		if(!validationResult.IsValid)
 		{
 			return ValidationProblem(validationResult.ToDictionary());
 		}

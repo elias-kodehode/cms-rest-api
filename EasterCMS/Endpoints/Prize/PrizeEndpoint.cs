@@ -13,12 +13,12 @@ public class PrizeEndpoint : IEndpoint
 	public void MapEndpoint(RouteGroupBuilder app)
 	{
 		app.MapGet("/prizes", GetPrizes);
-		app.MapGet("/prizes/{id}", GetPrizeById);
-		app.MapPost("/prizes", CreatePrize);
-		app.MapPut("/prizes/{id}", UpdatePrize);
-		app.MapDelete("/prizes/{id}", DeletePrize);
-		app.MapPost("/prizes/{id}/assign", AssignPrize);
 		app.MapGet("/prizes/statistics", GetStatistics);
+		app.MapGet("/prizes/{id:guid}", GetPrizeById);
+		app.MapPost("/prizes", CreatePrize);
+		app.MapPut("/prizes/{id:guid}", UpdatePrize);
+		app.MapDelete("/prizes/{id:guid}", DeletePrize);
+		app.MapPost("/prizes/{id:guid}/assign", AssignPrize);
 	}
 
 
@@ -27,7 +27,7 @@ public class PrizeEndpoint : IEndpoint
 	public record CreatePrizeRequest(Guid? ParticipantId, string Name, double Value);
 	public record UpdatePrizeRequest(
 		string? Name = null,
-		double? Value= null,
+		double? Value = null,
 		bool? Collected = null
 		);
 	public record GetStatisticsResponse(
@@ -40,16 +40,20 @@ public class PrizeEndpoint : IEndpoint
 	);
 
 
-    static async Task<IResult> GetPrizeById(Guid id, AppDbContext db)
+	static async Task<IResult> GetPrizeById(Guid id, AppDbContext db)
 	{
-		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+		var prize = await db
+			.Prizes
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.Id == id);
 
 		if(prize is null)
 		{
 			return NotFound("prize not found");
 		}
 
-		return Ok(new {
+		return Ok(new
+		{
 			prize = new PrizeDto
 			{
 				Collected = prize.Collected,
@@ -60,19 +64,31 @@ public class PrizeEndpoint : IEndpoint
 			}
 		});
 	}
-    static async Task<IResult> GetPrizes(AppDbContext db)
+
+	static async Task<IResult> GetPrizes(AppDbContext db)
 	{
 		return Ok(new
 		{
-			prizes = await db.Prizes.ToListAsync()
+			prizes = await db.Prizes
+			.AsNoTracking()
+			.Select(x => new PrizeDto
+			{
+				Collected = x.Collected,
+				Id = x.Id,
+				InStock = x.InStock,
+				Name = x.Name,
+				Value = x.Value,
+			})
+			.ToListAsync()
 		});
 	}
-    static async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
+
+	static async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
 	{
 		var validator = new CreatePrizeRequestValidator();
 		var validationResults = await validator.ValidateAsync(request);
 
-		if (!validationResults.IsValid)
+		if(!validationResults.IsValid)
 		{
 			return ValidationProblem(validationResults.ToDictionary());
 		}
@@ -88,27 +104,23 @@ public class PrizeEndpoint : IEndpoint
 		}
 
 
-		var prize = db.Prizes.Add(new Prize
+		var prize = new Prize
 		{
 			Name = request.Name,
 			Value = request.Value,
 			InStock = true,
 			Collected = false,
 			ParticipantId = request.ParticipantId
-		});
+		};
 
-		prize.State = EntityState.Added;
+		db.Prizes.Add(prize);
+
 		await db.SaveChangesAsync();
 
-		return Ok(new
-		{
-			prize.Entity.Id
-		});
+
+		return Created($"/prizes/{prize.Id}", prize);
 	}
-    static async Task<IResult> UpdatePrize(
-		[FromRoute] Guid id, 
-		[FromBody]UpdatePrizeRequest request,
-		AppDbContext db)
+	static async Task<IResult> UpdatePrize([FromRoute] Guid id, [FromBody] UpdatePrizeRequest request, AppDbContext db)
 	{
 		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
 
@@ -123,35 +135,35 @@ public class PrizeEndpoint : IEndpoint
 			return BadRequest();
 		}
 
-		var entity = db.Update(prize);
 
 		if(request.Name is not null)
 		{
-			entity.Entity.Name = request.Name;
+			prize.Name = request.Name;
 		}
 
 		if(request.Value is not null)
 		{
-			entity.Entity.Value = request.Value.Value;
+			prize.Value = request.Value.Value;
 		}
 
 		if(request.Collected is not null)
 		{
-			entity.Entity.Collected = request.Collected.Value;
+			prize.Collected = request.Collected.Value;
 		}
 
 
 		await db.SaveChangesAsync();
 		return Ok();
 	}
-    static async Task<IResult> DeletePrize(Guid id, AppDbContext db)
+	static async Task<IResult> DeletePrize(Guid id, AppDbContext db)
 	{
 		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
 
-		if (prize is null) return
+		if(prize is null)
+			return
 				NotFound();
 
-		if( prize.Collected == false)
+		if(prize.Collected == false)
 			return Conflict("prize not claimed");
 
 
@@ -159,15 +171,17 @@ public class PrizeEndpoint : IEndpoint
 		await db.SaveChangesAsync();
 
 		return Ok();
-		
+
 	}
-    static async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
+
+	static async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
 	{
-		var prize = db.Prizes.FirstOrDefault(x => x.Id == id);
+		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+
 		if(prize == null || !prize.InStock)
 		{
 			return BadRequest(
-				prize == null ? "Prize not found":"Prize is not in stock"
+				prize == null ? "Prize not found" : "Prize is not in stock"
 			);
 		}
 
@@ -177,31 +191,15 @@ public class PrizeEndpoint : IEndpoint
 
 		if(request.ParticipantId is not null)
 		{
-			participant = db.Participants.FirstOrDefault(x => request.ParticipantId == x.Id);
-            if (participant is null)
-            {
-                return NotFound();
-            }
-        }
+			participant = await db.Participants.FirstOrDefaultAsync(x => request.ParticipantId == x.Id);
+			if(participant is null)
+			{
+				return NotFound();
+			}
+		}
 
 
-
-
-		var entity = db.Update(prize);
-		entity.Entity.ParticipantId = request.ParticipantId;
-
-
-		//if(participant is null)
-		//{
-		//	entity.Entity.Collected = false;
-		//	entity.Entity.Participant = null;
-		//	entity.Entity.ParticipantId = null;
-		//}
-		//else
-		//{
-		//	entity.Entity.Collected = true;
-		//	entity.Entity.ParticipantId = participant.Id;
-		//}
+		prize.ParticipantId = request.ParticipantId;
 		await db.SaveChangesAsync();
 
 		return Ok($"Assigned prize to {request.ParticipantId}");
@@ -221,7 +219,7 @@ public class PrizeEndpoint : IEndpoint
 			))
 			.FirstOrDefaultAsync();
 
-        return Ok(response);
+		return Ok(response);
 	}
 
 }
