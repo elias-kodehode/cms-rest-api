@@ -1,4 +1,4 @@
-﻿namespace EasterCMS.Models;
+﻿namespace EasterCMS.Entities;
 
 public class Participant
 {

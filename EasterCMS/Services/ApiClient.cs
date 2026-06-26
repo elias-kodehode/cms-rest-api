@@ -1,4 +1,4 @@
-﻿using EasterCMS.Models;
+﻿using EasterCMS.Entities;
 
 namespace EasterCMS.Services;
 

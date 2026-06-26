@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace EasterCMS.Models;
+namespace EasterCMS.Entities;
 
 public class Prize
 {

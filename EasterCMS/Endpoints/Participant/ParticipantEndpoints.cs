@@ -1,5 +1,6 @@
 ﻿using EasterCMS.Data;
-using EasterCMS.Models;
+using EasterCMS.DTOs;
+using EasterCMS.Entities;
 using EasterCMS.Services;
 using EasterCMS.Validators;
 using FluentValidation;
@@ -18,6 +19,7 @@ public class ParticipantEndpoints : IEndpoint
         app.MapPost("/participants", CreateParticipant);
         app.MapPut("/participants/{id:guid}", UpdateParticipant);
         app.MapDelete("/participants/{id:guid}", DeleteParticipant);
+        app.MapPost("/participants/{id:guid}/prizes/assign", AssignPrize);
         app.MapGet("/participants/{id:guid}/prizes", GetParticipantPrizes);
     }
 
@@ -34,6 +36,8 @@ public class ParticipantEndpoints : IEndpoint
         DateTime? CreatedAt = null
     );
 
+    public record AssignPrizeRequest(Guid PrizeId);
+
     async Task<IResult> GetParticipants(AppDbContext ctx)
     {
         return Ok(new
@@ -41,7 +45,7 @@ public class ParticipantEndpoints : IEndpoint
             participants = await ctx
                 .Participants
                 .AsNoTracking()
-                .Include(x => x.Prizes)
+                //.Include(x => x.Prizes)
                 .Select(x => new ParticipantDto
                 {
                     Age = x.Age,
@@ -218,5 +222,35 @@ public class ParticipantEndpoints : IEndpoint
         return Ok(new { 
             prizes = participant.Prizes
         });
+    }
+
+
+    async Task<IResult> AssignPrize(Guid id, AppDbContext db, AssignPrizeRequest request, ILogger<ParticipantEndpoints> logger)
+    {
+        var p = await db.Participants.FindAsync(id);
+
+        if(p is null)
+        {
+            return NotFound("Participant not found");
+        }
+
+        var prize = await db.Prizes.FindAsync(request.PrizeId);
+
+        if(prize is null)
+        {
+            return NotFound("Prize not found");
+        }
+
+
+        if(prize.ParticipantId == p.Id)
+        {
+            return BadRequest("Participant already owns this prize");
+        }
+
+        prize.ParticipantId = p.Id;
+
+        logger.LogInformation("Assigned {prize} to {participant}", prize.Id, p.Id);
+        await db.SaveChangesAsync();
+        return Ok();
     }
 }

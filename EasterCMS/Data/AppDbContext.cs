@@ -1,4 +1,4 @@
-﻿using EasterCMS.Models;
+﻿using EasterCMS.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasterCMS.Data;

@@ -1,5 +1,6 @@
 ﻿using EasterCMS.Data;
-using EasterCMS.Models;
+using EasterCMS.DTOs;
+using EasterCMS.Entities;
 using EasterCMS.Services;
 using EasterCMS.Validators;
 using Microsoft.AspNetCore.Mvc;
@@ -65,12 +66,13 @@ public class PrizeEndpoint : IEndpoint
 		});
 	}
 
-	static async Task<IResult> GetPrizes(AppDbContext db)
+	static async Task<IResult> GetPrizes(AppDbContext db, HttpContext context)
 	{
 		return Ok(new
 		{
 			prizes = await db
 				.Prizes
+				.Include(x => x.Participant)
 				.AsNoTracking()
 				.Select(x => new PrizeDto
 				{
@@ -79,6 +81,7 @@ public class PrizeEndpoint : IEndpoint
 					InStock = x.InStock,
 					Name = x.Name,
 					Value = x.Value,
+					ParticipantId = x.ParticipantId
 				})
 				.ToListAsync()
 		});
