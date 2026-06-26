@@ -32,7 +32,7 @@ public class ParticipantEndpoints : IEndpoint
         int? Age = null,
         string? City = null,
         DateTime? CreatedAt = null
-        );
+    );
 
     async Task<IResult> GetParticipants(AppDbContext ctx)
     {
@@ -62,29 +62,29 @@ public class ParticipantEndpoints : IEndpoint
     }
     async Task<IResult> GetParticipantById([FromRoute] Guid id, AppDbContext db)
     {
-        var p = await db
+        var participant = await db
             .Participants
             .AsNoTracking()
             .Include(x => x.Prizes)
             .Where(x => x.Id == id)
-            .Select(x => new ParticipantDto
+            .Select(participant => new ParticipantDto
             {
-                Id = x.Id,
-                FullName = x.FullName,
-                Age = x.Age,
-                City = x.City,
-                Prizes = x.Prizes.Select(p => new PrizeDto
+                Id = participant.Id,
+                FullName = participant.FullName,
+                Age = participant.Age,
+                City = participant.City,
+                Prizes = participant.Prizes.Select(prize => new PrizeDto
                 {
-                    Collected = p.Collected,
-                    Id = p.Id,
-                    InStock = p.InStock,
-                    Name = p.Name,
-                    Value = p.Value
+                    Collected = prize.Collected,
+                    Id = prize.Id,
+                    InStock = prize.InStock,
+                    Name = prize.Name,
+                    Value = prize.Value
                 }).ToList()
             })
             .FirstOrDefaultAsync();
 
-        return p is not null ? Ok(p) : NotFound();
+        return participant is not null ? Ok(new { participant }) : NotFound("Participant not found");
     }
     async Task<IResult> CreateParticipant(CreateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
     {
@@ -109,6 +109,7 @@ public class ParticipantEndpoints : IEndpoint
         };
 
         await db.Participants.AddAsync(p);
+        await db.SaveChangesAsync();
 
         logger.LogInformation("Created new particiant {participant}", p);
 
@@ -116,9 +117,9 @@ public class ParticipantEndpoints : IEndpoint
     }
     async Task<IResult> UpdateParticipant(Guid id, UpdateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
     {
-        var p = await db.Participants.FirstOrDefaultAsync(x => x.Id == id);
+        var participant = await db.Participants.FindAsync(id);
 
-        if (p is null)
+        if (participant is null)
         {
             return NotFound();
         }
@@ -129,44 +130,42 @@ public class ParticipantEndpoints : IEndpoint
         }
 
 
-        if (request.City is not null && !request.City.Equals(p.City))
+        if (request.City is string city && !city.Equals(participant.City))
         {
-            logger.LogInformation("Updating City of {participant} from {previous} to {new}", p, p.City, request.City);
-            p.City = request.City;
+            logger.LogInformation("Updating City of {participant} from {previous} to {new}", participant, participant.City, city);
+            participant.City = city;
 
         }
 
-        if (request.FullName is not null && !request.FullName.Equals(p.FullName))
+        if (request.FullName is string fullName && !fullName.Equals(participant.FullName))
         {
-            logger.LogInformation("Updating FullName of {participant} from {previous} to {new}",  p, p.FullName, request.FullName);
-            p.FullName = request.FullName;
+            logger.LogInformation("Updating FullName of {participant} from {previous} to {new}",  participant, participant.FullName, fullName);
+            participant.FullName = fullName;
         }
 
-        if (request.Age is not null && !request.Age.Equals(p.Age))
+        if (request.Age is int age && !age.Equals(participant.Age))
         {
-            logger.LogInformation("Updating Age of {participant} from {previous} to {new}",  p, p.Age, request.Age);
-            p.Age = request.Age.Value;
+            logger.LogInformation("Updating Age of {participant} from {previous} to {new}",  participant, participant.Age, age);
+            participant.Age = age;
         }
 
-        if (request.CreatedAt is not null && !request.CreatedAt.Equals(p.CreatedAt))
+        if (request.CreatedAt is DateTime createdAt && !createdAt.Equals(participant.CreatedAt))
         {
-            logger.LogInformation("Updating CreatedAt date of {participant} from {previous} to {new}",  p, p.CreatedAt, request.CreatedAt.Value);
-            p.CreatedAt = request.CreatedAt.Value;
+            logger.LogInformation("Updating CreatedAt date of {participant} from {previous} to {new}",  participant, participant.CreatedAt, createdAt);
+            participant.CreatedAt =createdAt;
         }
 
         if (db.ChangeTracker.HasChanges())
         {
-            p.UpdatedAt = DateTime.UtcNow;
+            participant.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
-            logger.LogInformation("Updates of {participant} has been saved", p.Id);
+            logger.LogInformation("Updates of {participant} has been saved", participant.Id);
 
         }
         return Ok();
 
 
     }
-
-
     async Task<IResult> DeleteParticipant(Guid id, AppDbContext ctx, ILogger<ParticipantEndpoints> logger)
     {
         var p = ctx
@@ -183,6 +182,7 @@ public class ParticipantEndpoints : IEndpoint
         {
             return BadRequest("Cannot delete a user with an unclaimed prize");
         }
+
         ctx.Participants.Remove(p);
         await ctx.SaveChangesAsync();
 
@@ -190,7 +190,6 @@ public class ParticipantEndpoints : IEndpoint
         logger.LogInformation("Successfully deleted {p}", p.Id);
         return NoContent();
     }
-
     async Task<IResult> GetParticipantPrizes(Guid id, AppDbContext db)
     {
 
@@ -199,64 +198,25 @@ public class ParticipantEndpoints : IEndpoint
             .Participants
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(p => new
+            .Select(participant => new
             {
-                Prizes = p.Prizes.Select(x => new PrizeDto
+                Prizes = participant.Prizes.Select(prize => new PrizeDto
                 {
-                    Id = x.Id,
-                    Collected = x.Collected,
-                    InStock = x.InStock,
-                    Name = x.Name,
-                    Value = x.Value
+                    Id = prize.Id,
+                    Collected = prize.Collected,
+                    InStock = prize.InStock,
+                    Name = prize.Name,
+                    Value = prize.Value
                 }).ToList()
             }).FirstOrDefaultAsync();
 
         if(participant is null)
         {
-            return NotFound();
+            return NotFound("Participant not found");
         }
 
         return Ok(new { 
-            Prizes = participant.Prizes
+            prizes = participant.Prizes
         });
-
-        //var p = await db
-        //    .Participants
-        //    .AsNoTracking()
-        //    .Where(x => x.Id == id)
-        //    .SelectMany(x => x.Prizes)
-        //    .Select(x => new PrizeDto { 
-        //        Collected = x.Collected,
-        //        Id = x.Id,
-        //        InStock = x.InStock,
-        //        Name = x.Name,
-        //        Value = x.Value,
-        //    })
-        //    .ToListAsync();
-
-
-        //if (p.Count <= 0)
-        //{
-        //    var participantExists = 
-        //        await db
-        //            .Participants
-        //            .AsNoTracking()
-        //            .AnyAsync(p => p.Id == id);
-
-        //    if (!participantExists)
-        //        return NotFound();
-        //}
-
-
-        //if (prizes is null || prizes.Count <= 0)
-        //{
-        //    return NotFound();
-        //}
-
-        //return Ok(new {
-        //    prizes
-        //});
-
     }
-
 }
