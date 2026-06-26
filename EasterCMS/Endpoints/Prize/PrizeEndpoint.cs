@@ -49,7 +49,7 @@ public class PrizeEndpoint : IEndpoint
 
 		if(prize is null)
 		{
-			return NotFound("prize not found");
+			return NotFound("Prize not found");
 		}
 
 		return Ok(new
@@ -69,17 +69,18 @@ public class PrizeEndpoint : IEndpoint
 	{
 		return Ok(new
 		{
-			prizes = await db.Prizes
-			.AsNoTracking()
-			.Select(x => new PrizeDto
-			{
-				Collected = x.Collected,
-				Id = x.Id,
-				InStock = x.InStock,
-				Name = x.Name,
-				Value = x.Value,
-			})
-			.ToListAsync()
+			prizes = await db
+				.Prizes
+				.AsNoTracking()
+				.Select(x => new PrizeDto
+				{
+					Collected = x.Collected,
+					Id = x.Id,
+					InStock = x.InStock,
+					Name = x.Name,
+					Value = x.Value,
+				})
+				.ToListAsync()
 		});
 	}
 
@@ -93,15 +94,9 @@ public class PrizeEndpoint : IEndpoint
 			return ValidationProblem(validationResults.ToDictionary());
 		}
 
-		if(request.ParticipantId is not null)
-		{
-			var exists = await db.Participants.AnyAsync(x => x.Id == request.ParticipantId);
-
-			if(!exists)
-			{
-				return BadRequest("Participant not found");
-			}
-		}
+		if(request.ParticipantId is Guid participantId && !await db.Participants.AnyAsync(x => x.Id == participantId))
+			return BadRequest("Participant not found");
+		
 
 
 		var prize = new Prize
@@ -122,7 +117,7 @@ public class PrizeEndpoint : IEndpoint
 	}
 	static async Task<IResult> UpdatePrize([FromRoute] Guid id, [FromBody] UpdatePrizeRequest request, AppDbContext db)
 	{
-		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+		var prize = await db.Prizes.FindAsync(id);
 
 		if(prize is null)
 		{
@@ -136,19 +131,19 @@ public class PrizeEndpoint : IEndpoint
 		}
 
 
-		if(request.Name is not null)
+		if(request.Name is string name)
 		{
-			prize.Name = request.Name;
+			prize.Name = name;
 		}
 
-		if(request.Value is not null)
+		if(request.Value is double value)
 		{
-			prize.Value = request.Value.Value;
+			prize.Value = value;
 		}
 
-		if(request.Collected is not null)
+		if(request.Collected is bool collected)
 		{
-			prize.Collected = request.Collected.Value;
+			prize.Collected = collected;
 		}
 
 
@@ -157,14 +152,13 @@ public class PrizeEndpoint : IEndpoint
 	}
 	static async Task<IResult> DeletePrize(Guid id, AppDbContext db)
 	{
-		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+		var prize = await db.Prizes.FindAsync(id);
 
 		if(prize is null)
-			return
-				NotFound();
+			return NotFound("Prize not found");
 
 		if(prize.Collected == false)
-			return Conflict("prize not claimed");
+			return Conflict("Prize has not been claimed");
 
 
 		db.Prizes.Remove(prize);
@@ -176,26 +170,18 @@ public class PrizeEndpoint : IEndpoint
 
 	static async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
 	{
-		var prize = await db.Prizes.FirstOrDefaultAsync(x => x.Id == id);
+		var prize = await db.Prizes.FindAsync(id);
 
-		if(prize == null || !prize.InStock)
+
+		if (prize is null)
+			return NotFound("Prize not found");
+
+		if (!prize.InStock)
+			return BadRequest("Prize is not in stock");
+
+		if(request.ParticipantId is Guid participantId && !await db.Participants.AnyAsync(x => x.Id == participantId))
 		{
-			return BadRequest(
-				prize == null ? "Prize not found" : "Prize is not in stock"
-			);
-		}
-
-
-
-		Participant? participant = null;
-
-		if(request.ParticipantId is not null)
-		{
-			participant = await db.Participants.FirstOrDefaultAsync(x => request.ParticipantId == x.Id);
-			if(participant is null)
-			{
-				return NotFound();
-			}
+			return NotFound("Participant not found");
 		}
 
 
@@ -204,18 +190,20 @@ public class PrizeEndpoint : IEndpoint
 
 		return Ok($"Assigned prize to {request.ParticipantId}");
 	}
+
 	static async Task<IResult> GetStatistics(AppDbContext db)
 	{
 		var response = await db
 			.Prizes
+			.AsNoTracking()
 			.GroupBy(_ => 1)
-			.Select(x => new GetStatisticsResponse(
-				TotalPrizes: x.Count(),
-				InStock: x.Count(x => x.InStock),
-				Assigned: x.Count(x => x.ParticipantId != null),
-				Collected: x.Count(x => x.Collected),
-				TotalValue: x.Sum(x => x.Value),
-				AverageValue: x.Average(x => x.Value)
+			.Select(g => new GetStatisticsResponse(
+				TotalPrizes: g.Count(),
+				InStock: g.Count(p => p.InStock),
+				Assigned: g.Count(p => p.ParticipantId != null),
+				Collected: g.Count(p => p.Collected),
+				TotalValue: g.Sum(p => p.Value),
+				AverageValue: g.Average(p => p.Value)
 			))
 			.FirstOrDefaultAsync();
 
