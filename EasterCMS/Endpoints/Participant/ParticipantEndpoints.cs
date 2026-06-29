@@ -38,7 +38,7 @@ public class ParticipantEndpoints : IEndpoint
 
     public record AssignPrizeRequest(Guid PrizeId);
 
-    async Task<IResult> GetParticipants(AppDbContext ctx)
+    static async Task<IResult> GetParticipants(AppDbContext ctx)
     {
         return Ok(new
         {
@@ -64,7 +64,7 @@ public class ParticipantEndpoints : IEndpoint
                 .ToListAsync()
         });
     }
-    async Task<IResult> GetParticipantById([FromRoute] Guid id, AppDbContext db)
+    static async Task<IResult> GetParticipantById([FromRoute] Guid id, AppDbContext db)
     {
         var participant = await db
             .Participants
@@ -90,7 +90,7 @@ public class ParticipantEndpoints : IEndpoint
 
         return participant is not null ? Ok(new { participant }) : NotFound("Participant not found");
     }
-    async Task<IResult> CreateParticipant(CreateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
+    static async Task<IResult> CreateParticipant(CreateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
     {
         var validator = new CreateParticipantRequestValidator();
         var validationResult = await validator.ValidateAsync(request);
@@ -119,7 +119,7 @@ public class ParticipantEndpoints : IEndpoint
 
         return Created($"/participants/{p.Id}", p);
     }
-    async Task<IResult> UpdateParticipant(Guid id, UpdateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
+    static async Task<IResult> UpdateParticipant(Guid id, UpdateParticipantRequest request, AppDbContext db, ILogger<ParticipantEndpoints> logger)
     {
         var participant = await db.Participants.FindAsync(id);
 
@@ -170,7 +170,7 @@ public class ParticipantEndpoints : IEndpoint
 
 
     }
-    async Task<IResult> DeleteParticipant(Guid id, AppDbContext ctx, ILogger<ParticipantEndpoints> logger)
+    static async Task<IResult> DeleteParticipant(Guid id, AppDbContext ctx, ILogger<ParticipantEndpoints> logger)
     {
         var p = ctx
             .Participants
@@ -194,7 +194,7 @@ public class ParticipantEndpoints : IEndpoint
         logger.LogInformation("Successfully deleted {p}", p.Id);
         return NoContent();
     }
-    async Task<IResult> GetParticipantPrizes(Guid id, AppDbContext db)
+    static async Task<IResult> GetParticipantPrizes(Guid id, AppDbContext db)
     {
 
         var participant = await 
@@ -223,9 +223,7 @@ public class ParticipantEndpoints : IEndpoint
             prizes = participant.Prizes
         });
     }
-
-
-    async Task<IResult> AssignPrize(Guid id, AppDbContext db, AssignPrizeRequest request, ILogger<ParticipantEndpoints> logger)
+    static async Task<IResult> AssignPrize(Guid id, AppDbContext db, AssignPrizeRequest request, ILogger<ParticipantEndpoints> logger)
     {
         var p = await db.Participants.FindAsync(id);
 
