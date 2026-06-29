@@ -2,7 +2,6 @@
 @using EasterCMS.Data
 @using EasterCMS.Services
 @using System.ComponentModel.DataAnnotations;
-@using EasterCMS.Models;
 @using Microsoft.EntityFrameworkCore;
 @inject AppDbContext db
 @inject ApiClient API
@@ -61,7 +60,7 @@
 
     private async Task Submit(EditContext args)
     {
-        await db.Participants.AddAsync(new Models.Participant
+        await db.Participants.AddAsync(new Participant
         {
             Age = request.Age,
             FullName = request.FullName,

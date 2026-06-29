@@ -11,26 +11,55 @@ namespace EasterCMS.Endpoints;
 
 public class PrizeEndpoint : IEndpoint
 {
-	public void MapEndpoint(RouteGroupBuilder app)
+	public void MapEndpoint(RouteGroupBuilder builder)
 	{
-		app.MapGet("/prizes", GetPrizes);
-		app.MapGet("/prizes/statistics", GetStatistics);
-		app.MapGet("/prizes/{id:guid}", GetPrizeById);
-		app.MapPost("/prizes", CreatePrize);
+		var app = builder
+			.MapGroup("/prizes")
+			.WithGroupName("Prize")
+			.WithTags("Prizes");
+
+		//get ALL prizes
+		app.MapGet("/", GetPrizes);
+
+		//Get statistics
+		app.MapGet("/statistics", GetStatistics);
+
+		//get a prize by its ID
+		app.MapGet("/{id:guid}", GetPrizeById);
+
+		//Create a new prize
+		app.MapPost("/", CreatePrize);
+
+		//Update a prize, specified by its ID
 		app.MapPut("/prizes/{id:guid}", UpdatePrize);
-		app.MapDelete("/prizes/{id:guid}", DeletePrize);
-		app.MapPost("/prizes/{id:guid}/assign", AssignPrize);
+
+		//Delete a prize specified by its ID
+		app.MapDelete("/{id:guid}", DeletePrize);
+
+		//Assign a prize to a participant, specified with their ID
+		app.MapPost("/{id:guid}/assign", AssignPrize);
+
+		//builder.MapGet("/prizes", GetPrizes);
+		//builder.MapGet("/prizes/statistics", GetStatistics);
+		//builder.MapGet("/prizes/{id:guid}", GetPrizeById);
+		//builder.MapPost("/prizes", CreatePrize);
+		//builder.MapPut("/prizes/{id:guid}", UpdatePrize);
+		//builder.MapDelete("/prizes/{id:guid}", DeletePrize);
+		//builder.MapPost("/prizes/{id:guid}/assign", AssignPrize);
 	}
 
 
 
 	public record AssignPrizeRequest(Guid? ParticipantId);
+
 	public record CreatePrizeRequest(Guid? ParticipantId, string Name, double Value);
+
 	public record UpdatePrizeRequest(
 		string? Name = null,
 		double? Value = null,
 		bool? Collected = null
-		);
+	);
+
 	public record GetStatisticsResponse(
 		int TotalPrizes,
 		int InStock,
@@ -65,7 +94,6 @@ public class PrizeEndpoint : IEndpoint
 			}
 		});
 	}
-
 	static async Task<IResult> GetPrizes(AppDbContext db, HttpContext context)
 	{
 		return Ok(new
@@ -86,7 +114,6 @@ public class PrizeEndpoint : IEndpoint
 				.ToListAsync()
 		});
 	}
-
 	static async Task<IResult> CreatePrize(AppDbContext db, CreatePrizeRequest request)
 	{
 		var validator = new CreatePrizeRequestValidator();
@@ -170,7 +197,6 @@ public class PrizeEndpoint : IEndpoint
 		return NoContent();
 
 	}
-
 	static async Task<IResult> AssignPrize([FromRoute] Guid id, AssignPrizeRequest request, AppDbContext db)
 	{
 		var prize = await db.Prizes.FindAsync(id);
@@ -193,7 +219,6 @@ public class PrizeEndpoint : IEndpoint
 
 		return Ok($"Assigned prize to {request.ParticipantId}");
 	}
-
 	static async Task<IResult> GetStatistics(AppDbContext db)
 	{
 		var response = await db
