@@ -12,15 +12,41 @@ namespace EasterCMS.Endpoints;
 
 public class ParticipantEndpoints : IEndpoint
 {
-    public void MapEndpoint(RouteGroupBuilder app)
+    public void MapEndpoint(RouteGroupBuilder builder)
     {
-        app.MapGet("/participants", GetParticipants);
-        app.MapGet("/participants/{id:guid}", GetParticipantById);
-        app.MapPost("/participants", CreateParticipant);
-        app.MapPut("/participants/{id:guid}", UpdateParticipant);
-        app.MapDelete("/participants/{id:guid}", DeleteParticipant);
-        app.MapPost("/participants/{id:guid}/prizes/assign", AssignPrize);
-        app.MapGet("/participants/{id:guid}/prizes", GetParticipantPrizes);
+        var app = builder
+            .MapGroup("/participants")
+            .WithGroupName("Participant")
+            .WithTags("Participants");
+
+        //get ALL participants
+        app.MapGet("/", GetParticipants);
+
+        //get participant by ID
+        app.MapGet("/{id:guid}", GetParticipantById);
+
+        //create new participant
+        app.MapPost("/", CreateParticipant);
+
+        //update participant, specified by its ID
+        app.MapPut("/{id:guid}", UpdateParticipant);
+
+        //delete participant specified by its ID
+        app.MapDelete("/{id:guid}", DeleteParticipant);
+
+        //assign prize to participant
+        app.MapPost("/{id:guid}/prizes/assign", AssignPrize);
+
+        //get all participant prizes
+        app.MapGet("/{id:guid}/prizes", GetParticipantPrizes);
+
+        //builder.MapGet("/participants", GetParticipants);
+        //builder.MapGet("/participants/{id:guid}", GetParticipantById);
+        //builder.MapPost("/participants", CreateParticipant);
+        //builder.MapPut("/participants/{id:guid}", UpdateParticipant);
+        //builder.MapDelete("/participants/{id:guid}", DeleteParticipant);
+        //builder.MapPost("/participants/{id:guid}/prizes/assign", AssignPrize);
+        //builder.MapGet("/participants/{id:guid}/prizes", GetParticipantPrizes);
     }
 
     public record CreateParticipantRequest(
