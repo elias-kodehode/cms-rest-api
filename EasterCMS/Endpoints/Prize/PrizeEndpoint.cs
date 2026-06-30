@@ -13,31 +13,31 @@ public class PrizeEndpoint : IEndpoint
 {
 	public void MapEndpoint(RouteGroupBuilder builder)
 	{
-		var app = builder
+		var prizes = builder
 			.MapGroup("/prizes")
 			.WithGroupName("Prize")
 			.WithTags("Prizes");
 
 		//get ALL prizes
-		app.MapGet("/", GetPrizes);
+		prizes.MapGet("/", GetPrizes);
 
 		//Get statistics
-		app.MapGet("/statistics", GetStatistics);
+		prizes.MapGet("/statistics", GetStatistics);
 
 		//get a prize by its ID
-		app.MapGet("/{id:guid}", GetPrizeById);
+		prizes.MapGet("/{id:guid}", GetPrizeById);
 
 		//Create a new prize
-		app.MapPost("/", CreatePrize);
+		prizes.MapPost("/", CreatePrize);
 
 		//Update a prize, specified by its ID
-		app.MapPut("/prizes/{id:guid}", UpdatePrize);
+		prizes.MapPut("/prizes/{id:guid}", UpdatePrize);
 
 		//Delete a prize specified by its ID
-		app.MapDelete("/{id:guid}", DeletePrize);
+		prizes.MapDelete("/{id:guid}", DeletePrize);
 
 		//Assign a prize to a participant, specified with their ID
-		app.MapPost("/{id:guid}/assign", AssignPrize);
+		prizes.MapPost("/{id:guid}/assign", AssignPrize);
 
 		//builder.MapGet("/prizes", GetPrizes);
 		//builder.MapGet("/prizes/statistics", GetStatistics);
