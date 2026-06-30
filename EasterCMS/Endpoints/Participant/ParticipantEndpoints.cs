@@ -19,34 +19,13 @@ public class ParticipantEndpoints : IEndpoint
             .WithGroupName("Participant")
             .WithTags("Participants");
 
-        //get ALL participants
         participants.MapGet("/", GetParticipants);
-
-        //get participant by ID
         participants.MapGet("/{id:guid}", GetParticipantById);
-
-        //create new participant
         participants.MapPost("/", CreateParticipant);
-
-        //update participant, specified by its ID
         participants.MapPut("/{id:guid}", UpdateParticipant);
-
-        //delete participant specified by its ID
         participants.MapDelete("/{id:guid}", DeleteParticipant);
-
-        //assign prize to participant
         participants.MapPost("/{id:guid}/prizes/assign", AssignPrize);
-
-        //get all participant prizes
         participants.MapGet("/{id:guid}/prizes", GetParticipantPrizes);
-
-        //builder.MapGet("/participants", GetParticipants);
-        //builder.MapGet("/participants/{id:guid}", GetParticipantById);
-        //builder.MapPost("/participants", CreateParticipant);
-        //builder.MapPut("/participants/{id:guid}", UpdateParticipant);
-        //builder.MapDelete("/participants/{id:guid}", DeleteParticipant);
-        //builder.MapPost("/participants/{id:guid}/prizes/assign", AssignPrize);
-        //builder.MapGet("/participants/{id:guid}/prizes", GetParticipantPrizes);
     }
 
     public record CreateParticipantRequest(

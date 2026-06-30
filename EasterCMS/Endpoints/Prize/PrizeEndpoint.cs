@@ -18,34 +18,13 @@ public class PrizeEndpoint : IEndpoint
 			.WithGroupName("Prize")
 			.WithTags("Prizes");
 
-		//get ALL prizes
 		prizes.MapGet("/", GetPrizes);
-
-		//Get statistics
 		prizes.MapGet("/statistics", GetStatistics);
-
-		//get a prize by its ID
 		prizes.MapGet("/{id:guid}", GetPrizeById);
-
-		//Create a new prize
 		prizes.MapPost("/", CreatePrize);
-
-		//Update a prize, specified by its ID
-		prizes.MapPut("/prizes/{id:guid}", UpdatePrize);
-
-		//Delete a prize specified by its ID
+		prizes.MapPut("/{id:guid}", UpdatePrize);
 		prizes.MapDelete("/{id:guid}", DeletePrize);
-
-		//Assign a prize to a participant, specified with their ID
 		prizes.MapPost("/{id:guid}/assign", AssignPrize);
-
-		//builder.MapGet("/prizes", GetPrizes);
-		//builder.MapGet("/prizes/statistics", GetStatistics);
-		//builder.MapGet("/prizes/{id:guid}", GetPrizeById);
-		//builder.MapPost("/prizes", CreatePrize);
-		//builder.MapPut("/prizes/{id:guid}", UpdatePrize);
-		//builder.MapDelete("/prizes/{id:guid}", DeletePrize);
-		//builder.MapPost("/prizes/{id:guid}/assign", AssignPrize);
 	}
 
 
